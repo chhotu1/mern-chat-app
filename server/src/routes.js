@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const AuthController = require('./controllers/AuthController');
 const UserController = require('./controllers/UserController');
+const MessageController = require('./controllers/MessageController');
 
 const validation = require('./utils/validation');
 const middleware = require('./middleware/Auth');
@@ -17,5 +18,9 @@ router.route('/user/:id').put(middleware, validation.profileUpdateValidation, Us
 router.route('/user/profilePhotoChange').post(middleware, UserController.user.profilePhotoChange);
 router.route('/change-password').post(middleware, validation.changePassword, UserController.user.changePassword);
 
+
+//MessageController
+router.route('/get-message').post(middleware, MessageController.message.getMessages);
+router.route('/add-message').post(middleware, MessageController.message.addMessages);
 
 module.exports = router;
