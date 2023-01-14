@@ -1,17 +1,42 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useRef } from 'react';
+import { io } from "socket.io-client";
 import UserServices from '../../services/UserServices';
+import { getCurrentUser } from '../../utils/Constant';
 import './../../styles/home.scss';
 // https://codepen.io/d10111/pen/OJwJMgw demo
 
 const Home = () => {
+  const socket = useRef();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [users, setUsers] = useState([])
   const [user, setUser] = useState({});
   const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([])
+  const [currentUser, setCurrentUser] = useState({});
+
 
   useEffect(() => {
     getUsers();
+    _getCurrentUser();
   }, [])
+
+  useEffect(() => {
+    if (currentUser) {
+      socket.current = io(process.env.REACT_APP_HOST_URL);
+      socket.current.emit("add-user", currentUser._id);
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (Object.keys(user).length !== 0) {
+      getMessage();
+    }
+  }, [user])
+
+  const _getCurrentUser=async()=>{
+    let _user=await getCurrentUser();
+    setCurrentUser(_user);
+  };
 
   const getUsers = () => {
     UserServices.usersList().then((response) => {
@@ -32,14 +57,14 @@ const Home = () => {
 
   const handleSendMsg = async (e) => {
     e.preventDefault()
-    let payload ={
-      message:message,
-      to:user._id
+    let payload = {
+      message: message,
+      to: user._id
     }
-    if(message){
-      UserServices.addMessage(payload).then((response)=>{
+    if (message) {
+      UserServices.addMessage(payload).then((response) => {
         console.log(response)
-      }).catch((error)=>{
+      }).catch((error) => {
         console.log(error)
       })
     }
@@ -63,6 +88,19 @@ const Home = () => {
     // msgs.push({ fromSelf: true, message: msg });
     // setMessages(msgs);
   };
+
+  const getMessage = () => {
+    let payload = {
+      to: user._id
+    }
+    UserServices.getMessage(payload).then((response) => {
+      if (response.data.status === true) {
+        setMessages(response.data.data)
+      }
+    }).catch((error) => {
+      console.log(error)
+    })
+  }
 
 
   return (
@@ -142,34 +180,32 @@ const Home = () => {
                       <div className="modal-body">
                         <div className="msg-body">
                           <ul>
-                            <li className="sender">
-                              <p> Hey, Are you there? </p>
-                              <span className="time">10:06 am</span>
-                            </li>
+                            {messages && messages.map((item, index) => {
+                              return (
+                                <li className={item.fromSelf?"repaly":"sender"} key={index}>
+                                  <p> {item.message} </p>
+                                  <span className="time">10:06 am</span>
+                                </li>
+                              )
+                            })}
 
-                            <li className="repaly">
-                              <p> Last Minute Festive Packages From Superbreak</p>
-                              <span className="time">10:20 am</span>
-                            </li>
+                            {/* 
 
                             <li>
                               <div className="divider">
                                 <h6>Today</h6>
                               </div>
                             </li>
-                            <li className="repaly">
-                              <p> Last Minute Festive Packages From Superbreak</p>
-                              <span className="time">10:36 am</span>
-                            </li>
+                             */}
                           </ul>
                         </div>
                       </div>
                       <div className="send-box">
                         <form onSubmit={handleSendMsg}>
-                          <input type="text" onChange={(e)=>setMessage(e.target.value)} className="form-control" aria-label="message…" placeholder="Write message…" />
+                          <input type="text" onChange={(e) => setMessage(e.target.value)} className="form-control" aria-label="message…" placeholder="Write message…" />
                           <button type="submit"><i className="fa fa-paper-plane" /> Send</button>
                         </form>
-                        <div className="send-btns">
+                        {/* <div className="send-btns">
                           <div className="attach">
                             <div className="button-wrapper">
                               <span className="label">
@@ -189,7 +225,7 @@ const Home = () => {
                               </svg> Appoinment</a>
                             </div>
                           </div>
-                        </div>
+                        </div> */}
                         <button type='button' onClick={() => {
                           localStorage.clear();
                           window.location.href = "/"

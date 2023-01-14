@@ -1,3 +1,5 @@
+import UserServices from "../services/UserServices";
+
 const fullmonthName = [
     "January",
     "February",
@@ -40,3 +42,12 @@ export function createdAtDateFormate(date) {
     let year = event.getFullYear();
     return `${year}-${month}-${day} `;
 }
+
+export async function getCurrentUser() {
+    let user = await UserServices.currentUser();
+    if(user.data.status===true){
+        return user.data.data;
+    }
+    return {};
+}
+

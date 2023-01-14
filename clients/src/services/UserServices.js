@@ -8,14 +8,20 @@ const usersList=()=>{
 const addMessage=(data)=>{
   return http.post(endpoints.addMessage,data, {headers: {token: StorageService.getAccessToken()}});
 }
+
 const getMessage=(data)=>{
   return http.post(endpoints.getMessage,data, {headers: {token: StorageService.getAccessToken()}});
+}
+
+const currentUser=()=>{
+  return http.get(endpoints.userProfile, {headers: {token: StorageService.getAccessToken()}});
 }
 
 const UserServices = {
     usersList,
     addMessage,
-    getMessage
+    getMessage,
+    currentUser
 };
 
 export default UserServices;
